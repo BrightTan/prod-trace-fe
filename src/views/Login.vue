@@ -1,5 +1,5 @@
 <template>
-  <div class="login-page" >
+  <div class="login-page">
     <ScrollBar>
       <div class="page-container">
         <img src="../assets/logo-big.png" alt="Logo" class="logo" />
