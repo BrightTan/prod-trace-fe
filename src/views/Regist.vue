@@ -29,6 +29,7 @@
               placeholder="请输入用户名"
               v-model="registInfo.account"
               suffix-icon="el-icon-s-custom"
+              @keyup.native.enter="onRegist"
             >
             </el-input>
             <el-input
@@ -36,6 +37,7 @@
               placeholder="请输入密码"
               v-model="registInfo.password"
               suffix-icon="el-icon-key"
+              @keyup.native.enter="onRegist"
             >
             </el-input>
             <el-input
@@ -43,31 +45,42 @@
               placeholder="请再次输入密码"
               v-model="registInfo.passwordAgain"
               suffix-icon="el-icon-key"
+              @keyup.native.enter="onRegist"
             >
             </el-input>
             <el-input
               placeholder="请输入手机号码"
               v-model="registInfo.phone"
               suffix-icon="el-icon-phone"
+              @keyup.native.enter="onRegist"
             >
             </el-input>
             <el-input
               placeholder="请输入注册邮箱"
               v-model="registInfo.email"
               suffix-icon="el-icon-message"
+              @keyup.native.enter="onRegist"
             >
             </el-input>
             <el-input
               class="code-input"
               placeholder="请输入验证码"
               v-model="registInfo.authCode"
+              @keyup.native.enter="onRegist"
             >
-              <el-button slot="append" icon="el-icon-s-promotion"
-                >发送邮箱验证码</el-button
+              <el-button
+                slot="append"
+                icon="el-icon-s-promotion"
+                @click="getVerifyCode"
+                :disabled="
+                  registInfo.emailButtonText !== '发送邮箱验证码' &&
+                    registInfo.emailButtonText !== '重新发送'
+                "
+                >{{ registInfo.emailButtonText }}</el-button
               >
             </el-input>
             <div class="buttons">
-              <el-button type="primary">注册</el-button>
+              <el-button type="primary" @click="onRegist">注册</el-button>
             </div>
           </div>
         </div>
@@ -78,6 +91,14 @@
 
 <script>
 import ScrollBar from "@/components/common/ScrollBar.vue";
+
+const checkType = {
+  NOT_NULL: "NOT_NULL",
+  IS_EQUAL: "IS_EQUAL",
+  EMAIL: "EMAIL",
+  PHONE: "PHONE"
+};
+
 export default {
   name: "Regist",
   components: { ScrollBar },
@@ -88,19 +109,158 @@ export default {
         password: "",
         passwordAgain: "",
         phone: "",
-        wechat: "",
         email: "",
         authCode: "",
-        companyClass: ""
+        companyClass: "",
+        emailButtonText: "发送邮箱验证码"
       }
     };
   },
   methods: {
+    onRegist() {
+      if (
+        this.checkInputs(
+          checkType.NOT_NULL,
+          [this.registInfo.companyClass],
+          "请选择注册公司类型!"
+        ) &&
+        this.checkInputs(
+          checkType.NOT_NULL,
+          [this.registInfo.account],
+          "用户名不能为空!"
+        ) &&
+        this.checkInputs(
+          checkType.NOT_NULL,
+          [this.registInfo.password],
+          "密码不能为空!"
+        ) &&
+        this.checkInputs(
+          checkType.NOT_NULL,
+          [this.registInfo.passwordAgain],
+          "请再次输入密码!"
+        ) &&
+        this.checkInputs(
+          checkType.IS_EQUAL,
+          [this.registInfo.password, this.registInfo.passwordAgain],
+          "两次输入密码不一致!"
+        ) &&
+        this.checkInputs(
+          checkType.NOT_NULL,
+          [this.registInfo.phone],
+          "手机号码不能为空!"
+        ) &&
+        this.checkInputs(
+          checkType.NOT_NULL,
+          [this.registInfo.email],
+          "注册邮箱不能为空!"
+        ) &&
+        this.checkInputs(
+          checkType.NOT_NULL,
+          [this.registInfo.authCode],
+          "验证码不能为空!"
+        ) &&
+        this.checkInputs(
+          checkType.EMAIL,
+          [this.registInfo.email],
+          "注册邮箱格式不正确!"
+        ) &&
+        this.checkInputs(
+          checkType.PHONE,
+          [this.registInfo.phone],
+          "手机号码格式不正确!"
+        )
+      ) {
+        this.$Http
+          .post({
+            url: "/user/register",
+            data: {
+              registered: this.registInfo.companyClass,
+              nickname: this.registInfo.account,
+              tel: this.registInfo.phone,
+              username: this.registInfo.email,
+              password: this.registInfo.password,
+              verificationCode: this.registInfo.authCode
+            }
+          })
+          .then(() => {
+            this.$message.success("注册成功");
+            this.resetData();
+          });
+      }
+    },
+    getVerifyCode() {
+      if (
+        this.checkInputs(
+          checkType.NOT_NULL,
+          [this.registInfo.email],
+          "注册邮箱不能为空!"
+        ) &&
+        this.checkInputs(
+          checkType.EMAIL,
+          [this.registInfo.email],
+          "注册邮箱格式不正确!"
+        )
+      ) {
+        this.$Http
+          .post({
+            url: "/user/getVerificationCode",
+            data: {
+              email: this.registInfo.email
+            }
+          })
+          .then(() => {
+            this.$message.success("成功发送邮箱验证码，请注意查收");
+            this.countDown();
+          });
+      }
+    },
     onForgetPassword() {
       this.$router.push("/ChangePassword/auth");
     },
-    onChangeCompanyClass(value) {
-      console.log(value);
+    checkInputs(checkRuled, data, message) {
+      let res = true;
+      switch (checkRuled) {
+        case checkType.NOT_NULL:
+          data[0] === "" && (res = false);
+          break;
+        case checkType.IS_EQUAL:
+          data[0] !== data[1] && (res = false);
+          break;
+        case checkType.EMAIL:
+          !/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/.exec(data[0]) &&
+            (res = false);
+          break;
+        case checkType.PHONE:
+          !/^1[3456789]\d{9}$/.exec(data[0]) && (res = false);
+          break;
+      }
+      !res && this.$message.error(message);
+      return res;
+    },
+    countDown() {
+      let count = 5;
+      this.emailButtonText = `${count}秒后重新发送`;
+      let inter = setInterval(() => {
+        count--;
+        if (count <= 0) {
+          this.emailButtonText = "重新发送";
+          clearInterval(inter);
+        } else {
+          this.emailButtonText = `${count}秒后重新发送`;
+        }
+      }, 1000);
+    },
+    resetData() {
+      this.registInfo = {
+        account: "",
+        password: "",
+        passwordAgain: "",
+        phone: "",
+        email: "",
+        authCode: "",
+        companyClass: "",
+        emailButtonText: "发送邮箱验证码"
+      };
     }
   }
 };

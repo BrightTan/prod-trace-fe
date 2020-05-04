@@ -15,6 +15,7 @@
               placeholder="请输入邮箱"
               v-model="mail"
               suffix-icon="el-icon-message"
+              @keyup.native.enter="onLogin"
             >
             </el-input>
             <el-input
@@ -22,16 +23,17 @@
               v-model="password"
               show-password
               suffix-icon="el-icon-key"
+              @keyup.native.enter="onLogin"
             >
             </el-input>
             <div class="option">
-              <el-checkbox label="记住我"></el-checkbox>
+              <el-checkbox v-model="rememberMe" label="记住我"></el-checkbox>
               <a href="javascript:void()" @click="onForgetPassword"
                 >忘记密码？</a
               >
             </div>
             <div class="buttons">
-              <el-button type="primary">登录</el-button>
+              <el-button type="primary" @click="onLogin">登录</el-button>
               <span>或</span>
               <el-button type="primary">注册新账户</el-button>
             </div>
@@ -44,18 +46,53 @@
 
 <script>
 import ScrollBar from "@/components/common/ScrollBar.vue";
+import qs from "qs";
 export default {
   name: "Login",
   components: { ScrollBar },
   data() {
     return {
       mail: "",
-      password: ""
+      password: "",
+      rememberMe: true
     };
   },
   methods: {
     onForgetPassword() {
-      this.$router.push("/ChangePassword/auth");
+      this.$router.push("/ChangePassword");
+    },
+    onLogin() {
+      if (this.mail === "") {
+        this.$message.error("邮箱不能为空！");
+        return;
+      }
+      if (!/^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/.exec(this.mail)) {
+        this.$message.error("请输入正确格式的邮箱！");
+        return;
+      }
+      if (this.password === "") {
+        this.$message.error("密码不能为空！");
+        return;
+      }
+      this.$Http
+        .post({
+          url: "/login",
+          data: qs.stringify({
+            username: this.mail,
+            password: this.password,
+            rememberMe: this.rememberMe
+          })
+        })
+        .then(() => {
+          this.$message.success("登录成功！");
+        })
+        .finally(() => {
+          this.resetData();
+        });
+    },
+    resetData() {
+      this.mail = "";
+      this.password = "";
     }
   }
 };
