@@ -9,10 +9,11 @@
             <div>尊敬的用户，欢迎登陆</div>
             <span>农产品可溯源数据管理系统</span>
           </div>
-          <div class="form">
+          <form ref="form" class="form" method="post" action="/login">
             <el-input
               class="mail-input"
               placeholder="请输入邮箱"
+              name="username"
               v-model="mail"
               suffix-icon="el-icon-message"
               @keyup.native.enter="onLogin"
@@ -21,13 +22,18 @@
             <el-input
               placeholder="请输入密码"
               v-model="password"
+              name="password"
               show-password
               suffix-icon="el-icon-key"
               @keyup.native.enter="onLogin"
             >
             </el-input>
             <div class="option">
-              <el-checkbox v-model="rememberMe" label="记住我"></el-checkbox>
+              <el-checkbox
+                name="rememberMe"
+                v-model="rememberMe"
+                label="记住我"
+              ></el-checkbox>
               <a href="javascript:void()" @click="onForgetPassword"
                 >忘记密码？</a
               >
@@ -35,9 +41,9 @@
             <div class="buttons">
               <el-button type="primary" @click="onLogin">登录</el-button>
               <span>或</span>
-              <el-button type="primary">注册新账户</el-button>
+              <el-button type="primary" @click="onGogoRegist">注册新账户</el-button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
     </ScrollBar>
@@ -46,7 +52,7 @@
 
 <script>
 import ScrollBar from "@/components/common/ScrollBar.vue";
-import qs from "qs";
+
 export default {
   name: "Login",
   components: { ScrollBar },
@@ -54,12 +60,15 @@ export default {
     return {
       mail: "",
       password: "",
-      rememberMe: true
+      rememberMe: true,
     };
   },
   methods: {
     onForgetPassword() {
       this.$router.push("/ChangePassword");
+    },
+    onGogoRegist() {
+      this.$router.push("/regist");
     },
     onLogin() {
       if (this.mail === "") {
@@ -74,27 +83,14 @@ export default {
         this.$message.error("密码不能为空！");
         return;
       }
-      this.$Http
-        .post({
-          url: "/login",
-          data: qs.stringify({
-            username: this.mail,
-            password: this.password,
-            rememberMe: this.rememberMe
-          })
-        })
-        .then(() => {
-          this.$message.success("登录成功！");
-        })
-        .finally(() => {
-          this.resetData();
-        });
+      this.$refs.form.submit();
+      this.resetData();
     },
     resetData() {
       this.mail = "";
       this.password = "";
-    }
-  }
+    },
+  },
 };
 </script>
 

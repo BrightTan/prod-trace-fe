@@ -1,7 +1,7 @@
 <template>
   <ScrollBar>
     <el-dialog
-      title="添加种子"
+      :title="addProdDialog.isUpdate ? '修改生产信息' : '新增生产信息'"
       :visible="addProdDialog.visible"
       width="600px"
       :close-on-click-modal="false"
@@ -15,7 +15,8 @@
             drag
             action="/production/upload"
             accept="image/png, image/jpeg"
-            :key="addProdDialog.visible"
+            :file-list="file"
+            :on-remove="onRemoveImage"
             :on-success="onUploadImage"
             :on-error="onUploadFail"
             :limit="1"
@@ -45,6 +46,7 @@
           <span class="label">施肥次数：</span
           ><el-input-number
             :precision="0"
+            :step="1"
             v-model="addProdDialog.fertilizerTime"
             :min="0"
           ></el-input-number>
@@ -62,6 +64,7 @@
           <span class="label">农药播撒次数：</span
           ><el-input-number
             :precision="0"
+            :step="1"
             v-model="addProdDialog.pesticidePlantTime"
             :min="0"
           ></el-input-number>
@@ -80,7 +83,18 @@
         </div>
       </div>
       <span slot="footer" class="dialog-footer">
-        <Button type="green" :onClickButton="addProd">保存</Button>
+        <Button
+          v-if="!addProdDialog.isUpdate"
+          type="green"
+          :onClickButton="addProd"
+          >保存</Button
+        >
+        <Button
+          v-if="addProdDialog.isUpdate"
+          type="green"
+          :onClickButton="updateProd"
+          >保存</Button
+        >
         <Button type="dark" :onClickButton="handleCloseAddDlg">取消</Button>
       </span>
     </el-dialog>
@@ -106,10 +120,14 @@
             (addProdDialog.visible = true), onGetFieldInfo(), onGetSeedInfo()
           )
         "
-        >新增种子</Button
+        >新增生产信息</Button
       >
     </div>
-    <SeedProduction :config="productionInfos.data"></SeedProduction>
+    <SeedProduction
+      :config="productionInfos.data"
+      :onModify="onModify"
+      :onDelete="onDelete"
+    ></SeedProduction>
   </ScrollBar>
 </template>
 
@@ -147,7 +165,9 @@ export default {
       },
       fieldInfo: [],
       seedInfo: [],
+      file: [],
       addProdDialog: {
+        isUpdate: false,
         visible: false,
         imageFile: "", //图片信息
         fieldId: "", //所属田块id
@@ -155,6 +175,7 @@ export default {
         pesticidePlantTime: "", //农药播撒次数
         reapTime: "", //收割时间
         seedId: "", //seedId
+        productionId: "", //产品ID
       },
       modifyDialog: {
         seedId: "",
@@ -189,42 +210,145 @@ export default {
       if (
         this.checkInputs(
           checkType.NOT_NULL,
-          [this.addSeedDialog.seedName],
+          [this.addProdDialog.imageFile],
+          "种子图片不能为空!"
+        ) &&
+        this.checkInputs(
+          checkType.NOT_NULL,
+          [this.addProdDialog.fieldId],
+          "所属田块不能为空!"
+        ) &&
+        this.checkInputs(
+          checkType.NOT_NULL,
+          [this.addProdDialog.seedId],
           "种子名称不能为空!"
-        ) &&
-        this.checkInputs(
-          checkType.NOT_NULL,
-          [this.addSeedDialog.seedSource],
-          "种子来源不能为空!"
-        ) &&
-        this.checkInputs(
-          checkType.NOT_NULL,
-          [this.addSeedDialog.finishedName],
-          "成品名称不能为空!"
         )
       ) {
         this.$Http
           .post({
-            url: "/production/addSeed",
+            url: "/production/addProduction",
             data: {
-              seedName: this.addSeedDialog.seedName,
-              seedSource: this.addSeedDialog.seedSource,
-              isTransgene: this.addSeedDialog.isTransgene ? 1 : 0,
-              finishedName: this.addSeedDialog.finishedName,
+              productionId: this.addProdDialog.productionId,
+              imageFile: this.addProdDialog.imageFile,
+              fieldId: this.addProdDialog.fieldId,
+              fieldName: this.fieldInfo.find((value) => {
+                return value.fieldId === this.addProdDialog.fieldId;
+              }).fieldName,
+              fertilizerTime: this.addProdDialog.fertilizerTime,
+              pesticidePlantTime: this.addProdDialog.pesticidePlantTime,
+              reapTime: this.addProdDialog.reapTime,
+              seedId: this.addProdDialog.seedId,
+              seedName: this.seedInfo.find((value) => {
+                return (value.seedId = this.addProdDialog.seedId);
+              }).seedName,
             },
           })
           .then(() => {
             this.$message.success("添加种子成功");
-            this.getSeedData(1);
-            this.addSeedDialog = {
+            this.onGetProdInfos(1);
+            this.addProdDialog = {
+              isUpdate: false,
               visible: false,
-              seedName: "",
-              seedSource: "",
-              isTransgene: false,
-              finishedName: "",
+              imageFile: "",
+              fieldId: "",
+              fertilizerTime: "",
+              pesticidePlantTime: "",
+              reapTime: "",
+              seedId: "",
+              productionId: "",
             };
+            this.fieldInfo = [];
+            this.seedInfo = [];
           });
       }
+    },
+    updateProd() {
+      if (
+        this.checkInputs(
+          checkType.NOT_NULL,
+          [this.addProdDialog.imageFile],
+          "种子图片不能为空!"
+        ) &&
+        this.checkInputs(
+          checkType.NOT_NULL,
+          [this.addProdDialog.fieldId],
+          "所属田块不能为空!"
+        ) &&
+        this.checkInputs(
+          checkType.NOT_NULL,
+          [this.addProdDialog.seedId],
+          "种子名称不能为空!"
+        )
+      ) {
+        this.$Http
+          .post({
+            url: "/production/updateProduction",
+            data: {
+              productionId: this.addProdDialog.productionId,
+              imageFile: this.addProdDialog.imageFile,
+              fieldId: this.addProdDialog.fieldId,
+              fieldName: this.fieldInfo.find((value) => {
+                return value.fieldId === this.addProdDialog.fieldId;
+              }).fieldName,
+              fertilizerTime: this.addProdDialog.fertilizerTime,
+              pesticidePlantTime: this.addProdDialog.pesticidePlantTime,
+              reapTime: this.addProdDialog.reapTime,
+              seedId: this.addProdDialog.seedId,
+              seedName: this.seedInfo.find((value) => {
+                return (value.seedId = this.addProdDialog.seedId);
+              }).seedName,
+            },
+          })
+          .then(() => {
+            this.$message.success("修改种子成功");
+            this.onGetProdInfos(this.productionInfos.current);
+            this.addProdDialog = {
+              isUpdate: false,
+              visible: false,
+              imageFile: "",
+              fieldId: "",
+              fertilizerTime: "",
+              pesticidePlantTime: "",
+              reapTime: "",
+              seedId: "",
+              productionId: "",
+            };
+            this.fieldInfo = [];
+            this.seedInfo = [];
+          });
+      }
+    },
+    onModify(rawData) {
+      this.file = [
+        {
+          name: rawData.picUrl.split("/").pop(),
+          url: rawData.picUrl,
+        },
+      ];
+      this.addProdDialog = {
+        isUpdate: true,
+        visible: true,
+        imageFile: rawData.picUrl,
+        fieldId: rawData.fieldId,
+        fertilizerTime: rawData.fertilizerTime,
+        pesticidePlantTime: rawData.pesticidePlantTime,
+        reapTime: rawData.reapTime,
+        seedId: rawData.seedId,
+        productionId: rawData.productionId,
+      };
+    },
+    onDelete(rawData) {
+      this.$Http
+        .post({
+          url: "/production/deleteProduction",
+          data: {
+            productionId: rawData.productionId,
+          },
+        })
+        .then(() => {
+          this.$message.success("删除成功！");
+          this.onGetProdInfos(this.productionInfos.current);
+        });
     },
     onGetFieldInfo() {
       this.$Http
@@ -242,6 +366,10 @@ export default {
       this.$Http
         .get({
           url: "/production/seedMange",
+          data: {
+            startPage: 1,
+            pageSize: 10000,
+          },
         })
         .then((res) => {
           this.seedInfo = res.data.seedManage;
@@ -251,7 +379,9 @@ export default {
         });
     },
     handleCloseAddDlg() {
+      this.file = [];
       this.addProdDialog = {
+        isUpdate: false,
         visible: false,
         imageFile: "",
         fieldId: "",
@@ -261,6 +391,7 @@ export default {
         reapTime: "",
         seedName: "",
         seedId: "",
+        productionId: "",
       };
     },
     checkInputs(checkRuled, data, message) {
@@ -283,13 +414,27 @@ export default {
       !res && this.$message.error(message);
       return res;
     },
-    onUploadImage(response) {
+    onUploadImage(response, file) {
       switch (response.code) {
         case 1:
           this.addProdDialog.imageFile = response.data.url;
+          this.addProdDialog.productionId = response.data.productionId;
+          this.addProdDialog.file = [
+            {
+              name: file.name,
+              url: response.data.url,
+            },
+          ];
           break;
         case 2:
           this.addProdDialog.imageFile = response.data.url;
+          this.addProdDialog.productionId = response.data.productionId;
+          this.addProdDialog.file = [
+            {
+              name: file.name,
+              url: response.data.url,
+            },
+          ];
           this.$message.success(response.message);
           break;
         case -4:
@@ -306,8 +451,13 @@ export default {
           this.$message.error("上传失败");
       }
     },
+    onRemoveImage() {
+      this.file = [];
+      this.addProdDialog.imageFile = "";
+    },
     onUploadFail() {
       this.$message.error("上传失败");
+      this.file = [];
     },
   },
 };

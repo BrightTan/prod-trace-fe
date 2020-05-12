@@ -20,7 +20,7 @@
             <div class="detail">
               <li>
                 <div class="lable">溯源码编号</div>
-                <span>{{ item.productionId }}</span>
+                <span>{{ item.sourceNumber }}</span>
               </li>
               <li>
                 <div class="lable">种子名称</div>
@@ -51,8 +51,12 @@
             </li>
           </div>
           <div class="buttons">
-            <Button type="blue" style="">修 改</Button>
-            <Button type="red">删 除</Button>
+            <Button type="blue" :onClickButton="() => onModify(item)"
+              >修 改</Button
+            >
+            <Button type="red" :onClickButton="() => onDelete(item)"
+              >删 除</Button
+            >
           </div>
         </div>
       </el-col>
@@ -71,6 +75,14 @@ export default {
     config: {
       type: Array,
       default: () => [],
+    },
+    onModify: {
+      type: Function,
+      default: () => {},
+    },
+    onDelete: {
+      type: Function,
+      default: () => {},
     },
   },
 };

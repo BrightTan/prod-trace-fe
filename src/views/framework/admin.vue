@@ -78,12 +78,7 @@
         class="header"
         style="height: 45px;background-color:rgba(0, 0, 0, 0.1)"
       >
-        <el-avatar
-          shape="square"
-          :size="45"
-          src="https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png"
-        ></el-avatar>
-        <div class="user">Administrator</div>
+        <UserInfo></UserInfo>
       </el-header>
       <el-main>
         <router-view />
@@ -94,9 +89,10 @@
 
 <script>
 import ScrollBar from "@/components/common/ScrollBar.vue";
+import UserInfo from "@/components/common/UserInfo.vue";
 export default {
   name: "AdminFramework",
-  components: { ScrollBar },
+  components: { ScrollBar, UserInfo },
   data() {
     return {
       collapseMenu: false,
@@ -240,19 +236,6 @@ export default {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    .user {
-      height: 100%;
-      display: flex;
-      align-items: center;
-      padding: 0 10px;
-      color: white;
-      font-weight: bold;
-      background-color: rgba(0, 0, 0, 0.1);
-      cursor: pointer;
-      &:hover {
-        background-color: rgba(0, 0, 0, 0.2);
-      }
-    }
   }
   .el-main {
     padding: 0;

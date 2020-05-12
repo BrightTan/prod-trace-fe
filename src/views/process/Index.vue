@@ -179,11 +179,7 @@ export default {
   },
   methods: {
     getIndexData() {
-      const loadingIns = this.$loading({
-        text: "正在加载中",
-        spinner: "el-icon-loading",
-        background: "rgba(0, 0, 0, 0.8)",
-      });
+      this.graphLoading = true;
       this.$Http
         .get({
           url: "/processing/index",
@@ -200,7 +196,7 @@ export default {
           this.echartsConfig.dataset.source = echartsData;
         })
         .finally(() => {
-          loadingIns.close();
+          this.graphLoading = false;
         });
     },
   },

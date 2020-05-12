@@ -1,5 +1,11 @@
 <template>
   <div class="process-block">
+    <Dialog
+      :config="dialogConfig"
+      :readOnly="true"
+      :show="showAddDialog"
+      :onClose="handleCloseDialog"
+    ></Dialog>
     <el-row :gutter="20">
       <el-col
         v-for="item in config"
@@ -36,6 +42,11 @@
                   <Button
                     type="blue"
                     style="padding-top:2px;padding-bottom:2px;"
+                    :onClickButton="
+                      () => {
+                        onCheckDetail(data.productBatchNumber);
+                      }
+                    "
                     >查看详情</Button
                   >
                 </div>
@@ -64,15 +75,93 @@
 </template>
 <script>
 import Button from "@/components/common/Button.vue";
+import Dialog from "@/components/common/dialog/Dialog.vue";
+
 export default {
   name: "ProcessBlock",
   components: {
     Button,
+    Dialog,
   },
   props: {
     config: {
       type: Array,
       default: () => [],
+    },
+  },
+  data() {
+    return {
+      dialogConfig: {
+        title: "原料详情",
+        width: "400px",
+        labelWidth: "120px",
+        items: [],
+      },
+      showAddDialog: false,
+    };
+  },
+  methods: {
+    handleCloseDialog() {
+      this.showAddDialog = false;
+    },
+    onCheckDetail(productBatchNumber) {
+      this.$Http
+        .get({
+          url: "/processing/prodProductInfo",
+          data: {
+            startPage: 1,
+            pageSize: 1000000,
+          },
+        })
+        .then((res) => {
+          const data = res.data.prodProductInfo.find((item) => {
+            return item.productBatchNumber === productBatchNumber;
+          });
+          this.dialogConfig = {
+            title: "原料详情",
+            width: "500px",
+            labelWidth: "150px",
+            items: [
+              {
+                type: "text",
+                label: "初级农产品批次编号",
+                variable: "productBatchNumber",
+                default: data.productBatchNumber,
+              },
+              {
+                type: "text",
+                label: "溯源码编号",
+                variable: "sourceNumber",
+                default: data.sourceNumber,
+              },
+              {
+                type: "text",
+                label: "种子成品名称",
+                variable: "seedName",
+                default: data.seedName,
+              },
+              {
+                type: "text",
+                label: "收割时间",
+                variable: "reapTime",
+                default: data.reapTime,
+              },
+              {
+                type: "text",
+                label: "施肥次数",
+                variable: "fertilizerTime",
+                default: data.fertilizerTime,
+              },
+              {
+                type: "text",
+                label: "农药播撒次数",
+                variable: "pesticideTime",
+                default: data.pesticideTime,
+              },
+            ],
+          };
+          this.showAddDialog = true;
+        });
     },
   },
 };

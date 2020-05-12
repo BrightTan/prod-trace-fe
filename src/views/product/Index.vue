@@ -81,7 +81,7 @@ export default {
     Breadcrumb,
     ScrollBar,
     RotateBlock,
-    EchartsView
+    EchartsView,
   },
   data() {
     return {
@@ -94,63 +94,63 @@ export default {
         completedMonth: [], //最近一个月每天完成的数量
         fieldInProduction: [
           //正在生产中的田块
-        ]
+        ],
       },
       graphLoading: false,
       echartsConfig: {
         title: {
           text: "近一个月每日完成产品数量",
           textStyle: {
-            color: "white"
-          }
+            color: "white",
+          },
         },
         grid: {
-          right: 10
+          right: 10,
         },
         toolbox: {
           // y: 'bottom',
           feature: {
             dataZoom: {},
             magicType: {
-              type: ["line", "bar", "tiled"]
+              type: ["line", "bar", "tiled"],
             },
             dataView: {},
             saveAsImage: {
-              pixelRatio: 2
-            }
+              pixelRatio: 2,
+            },
           },
           iconStyle: {
-            borderColor: "#ffffff80"
+            borderColor: "#ffffff80",
           },
           emphasis: {
             iconStyle: {
-              borderColor: "white"
-            }
-          }
+              borderColor: "white",
+            },
+          },
         },
         tooltip: {},
         xAxis: {
           type: "category",
           axisLabel: {
-            rotate: 60
+            rotate: 60,
           },
           axisLine: {
             lineStyle: {
-              color: "white"
-            }
-          }
+              color: "white",
+            },
+          },
         },
         yAxis: {
           axisLine: {
             lineStyle: {
-              color: "white"
-            }
+              color: "white",
+            },
           },
           splitLine: {
             lineStyle: {
-              color: "#ffffff40"
-            }
-          }
+              color: "#ffffff40",
+            },
+          },
         },
         series: [
           {
@@ -159,28 +159,28 @@ export default {
               return idx * 10;
             },
             itemStyle: {
-              color: "#ffffff80"
+              color: "#ffffff80",
             },
             emphasis: {
               itemStyle: {
                 color: "#ffffff",
                 shadowColor: "white",
-                shadowBlur: 10
-              }
-            }
-          }
+                shadowBlur: 10,
+              },
+            },
+          },
         ],
         dataset: {
-          source: []
+          source: [],
         },
         animationEasing: "elasticOut",
         animationDelayUpdate: function(idx) {
           return idx * 5;
         },
         textStyle: {
-          color: "white"
-        }
-      }
+          color: "white",
+        },
+      },
     };
   },
   mounted() {
@@ -188,19 +188,15 @@ export default {
   },
   methods: {
     getIndexData() {
-      const loadingIns = this.$loading({
-        text: "正在加载中",
-        spinner: "el-icon-loading",
-        background: "rgba(0, 0, 0, 0.8)"
-      });
+      this.graphLoading = true;
       this.$Http
         .get({
-          url: "/production/index"
+          url: "/production/index",
         })
-        .then(res => {
+        .then((res) => {
           this.indexData = res.data;
           const echartsData = [];
-          res.data.completedMonth.forEach(v => {
+          res.data.completedMonth.forEach((v) => {
             const data = Object.entries(v)[0];
             data[1] = Number(data[1]);
             data[0] = data[0].slice(5);
@@ -209,10 +205,10 @@ export default {
           this.echartsConfig.dataset.source = echartsData;
         })
         .finally(() => {
-          loadingIns.close();
+          this.graphLoading = false;
         });
-    }
-  }
+    },
+  },
 };
 </script>
 <style lang="scss" scoped>

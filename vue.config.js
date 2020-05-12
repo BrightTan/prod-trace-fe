@@ -9,5 +9,6 @@ module.exports = {
   devServer: {
     disableHostCheck: true,
     proxy: "http://120.79.67.139:8082/mock/5e92db0528cfad5ddec49123/prodTrace"
+    // proxy: "http://rimwgu.natappfree.cc"
   }
 };

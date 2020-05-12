@@ -17,6 +17,10 @@ const routes = [
     component: () => import("@/views/ChangePassword.vue")
   },
   {
+    path: "/compeleteCompanyInfo",
+    component: () => import("@/views/CompeleteCompanyInfo.vue")
+  },
+  {
     path: "/product",
     component: () => import("@/views/framework/product.vue"),
     children: [

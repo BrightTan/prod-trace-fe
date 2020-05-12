@@ -1,7 +1,7 @@
 <template>
   <div
     ref="echartDom"
-    :data="echartsConfig.dataset.source.toString() + this.loading"
+    :data="this.loading"
     class="graph-view"
   ></div>
 </template>
@@ -17,6 +17,8 @@ import "echarts/lib/component/tooltip";
 import "echarts/lib/component/axisPointer";
 import "echarts/lib/component/legend";
 import "echarts/lib/component/title";
+import "echarts/lib/chart/scatter"
+import "echarts/lib/chart/pie"
 
 export default {
   name: "EchartsView",

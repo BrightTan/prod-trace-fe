@@ -11,16 +11,16 @@
           </div>
           <div class="form">
             <el-radio-group v-model="registInfo.companyClass">
-              <el-radio-button size="medium" label="生产公司"
+              <el-radio-button size="medium" :label="0"
                 >生产公司</el-radio-button
               >
-              <el-radio-button size="medium" label="加工公司"
+              <el-radio-button size="medium" :label="1"
                 >加工公司</el-radio-button
               >
-              <el-radio-button size="medium" label="运输公司"
+              <el-radio-button size="medium" :label="2"
                 >运输公司</el-radio-button
               >
-              <el-radio-button size="medium" label="销售公司"
+              <el-radio-button size="medium" :label="3"
                 >销售公司</el-radio-button
               >
             </el-radio-group>
@@ -73,10 +73,10 @@
                 icon="el-icon-s-promotion"
                 @click="getVerifyCode"
                 :disabled="
-                  registInfo.emailButtonText !== '发送邮箱验证码' &&
-                    registInfo.emailButtonText !== '重新发送'
+                  emailButtonText !== '发送邮箱验证码' &&
+                    emailButtonText !== '重新发送'
                 "
-                >{{ registInfo.emailButtonText }}</el-button
+                >{{ emailButtonText }}</el-button
               >
             </el-input>
             <div class="buttons">
@@ -96,7 +96,7 @@ const checkType = {
   NOT_NULL: "NOT_NULL",
   IS_EQUAL: "IS_EQUAL",
   EMAIL: "EMAIL",
-  PHONE: "PHONE"
+  PHONE: "PHONE",
 };
 
 export default {
@@ -112,8 +112,8 @@ export default {
         email: "",
         authCode: "",
         companyClass: "",
-        emailButtonText: "发送邮箱验证码"
-      }
+      },
+      emailButtonText: "发送邮箱验证码",
     };
   },
   methods: {
@@ -179,12 +179,25 @@ export default {
               tel: this.registInfo.phone,
               username: this.registInfo.email,
               password: this.registInfo.password,
-              verificationCode: this.registInfo.authCode
-            }
+              verificationCode: this.registInfo.authCode,
+            },
           })
           .then(() => {
             this.$message.success("注册成功");
-            this.resetData();
+            switch (this.registInfo.companyClass) {
+              case 0:
+                this.$router.replace("/product/index");
+                break;
+              case 1:
+                this.$router.replace("/process/index");
+                break;
+              case 2:
+                this.$router.replace("/transport/index");
+                break;
+              case 3:
+                this.$router.replace("/sale/index");
+                break;
+            }
           });
       }
     },
@@ -202,11 +215,11 @@ export default {
         )
       ) {
         this.$Http
-          .post({
+          .get({
             url: "/user/getVerificationCode",
             data: {
-              email: this.registInfo.email
-            }
+              email: this.registInfo.email,
+            },
           })
           .then(() => {
             this.$message.success("成功发送邮箱验证码，请注意查收");
@@ -215,7 +228,7 @@ export default {
       }
     },
     onForgetPassword() {
-      this.$router.push("/ChangePassword/auth");
+      this.$router.push("/ChangePassword");
     },
     checkInputs(checkRuled, data, message) {
       let res = true;
@@ -259,10 +272,10 @@ export default {
         email: "",
         authCode: "",
         companyClass: "",
-        emailButtonText: "发送邮箱验证码"
       };
-    }
-  }
+      this.emailButtonText = "发送邮箱验证码";
+    },
+  },
 };
 </script>
 
@@ -351,7 +364,7 @@ export default {
         }
       }
       .buttons {
-        margin-top: 20px;
+        margin-bottom: 50px;
         display: flex;
         justify-content: center;
         align-items: center;
